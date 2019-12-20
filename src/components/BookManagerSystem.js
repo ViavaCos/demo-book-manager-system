@@ -41,7 +41,7 @@ class BMS extends React.Component {
 
         // 数据校验 --- 非空判断
         if (!bookID) {
-            alert('请输入图书编号');
+            alert('图书编号异常或已存在');
             return;
         }
 
@@ -87,12 +87,45 @@ class BMS extends React.Component {
         // 修改状态值
         this.setState({
             bookList: data,
-            // bookID: '',
-            // bookName: ''
+            bookID: '',
+            bookName: ''
         })
 
         // console.log(this.state.bookList)
     }
+    // 删除图书
+    handleDelete (id, e) {
+        // 此方法无法在React中阻止默认行为
+        // return false
+
+        // 定义的方法中默认最后一个参数就是 React中封装的 事件对象
+        e.preventDefault();
+
+        if (window.confirm('你确定要删除该图书吗？删除后将无法恢复!')) {
+            // 拷贝数组
+            let bookList = [...this.state.bookList]
+
+            // 查找匹配索引值
+            const index = bookList.findIndex(item => {
+                return item.id === id
+            })
+
+            // 移除匹配数据
+            index !== -1 && bookList.splice(index, 1)
+
+            // 覆盖状态值
+            this.setState({
+                bookList
+            })
+
+            // console.log(index)
+        }
+    }
+    // 编辑图书
+    handleEdit (e) {
+        e.preventDefault();
+    }
+
     // ******************************************* 钩子函数区域 **********************************************
     componentDidMount () {
         this.getBooks()
@@ -107,9 +140,9 @@ class BMS extends React.Component {
                 <td>{item.id}</td>
                 <td>{item.bookName}</td>
                 <td>
-                    <a href="https://github.com/ViavaCos/demo-book-manager-system">编辑</a>
+                    <a onClick={this.handleEdit} href="https://github.com/ViavaCos/demo-book-manager-system">编辑</a>
                     <span className="line">|</span>
-                    <a href="https://github.com/ViavaCos/demo-book-manager-system">删除</a>
+                    <a onClick={this.handleDelete.bind(this, item.id)} href="https://github.com/ViavaCos/demo-book-manager-system">删除</a>
                 </td>
             </tr>
         ))
