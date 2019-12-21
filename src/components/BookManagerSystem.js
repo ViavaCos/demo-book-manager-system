@@ -1,6 +1,9 @@
 import React from 'react'
 import '../styles/BookManagerSystem.css'
 import EditBook from './editBook'
+import axios from 'axios'
+
+axios.defaults.baseURL = 'http://localhost:3001/'
 class BMS extends React.Component {
 
     state = {
@@ -14,17 +17,14 @@ class BMS extends React.Component {
     // ******************************************* 函数方法区域 **********************************************
 
     // 获取图书列表
-    getBooks () {
-        const data = [
-            { id: 1, bookName: '西游记' },
-            { id: 2, bookName: '红楼梦' },
-            { id: 3, bookName: '水浒传' },
-        ]
-        setTimeout(() => {
-            this.setState({
-                bookList: data
-            })
-        }, 500)
+    async getBooks () {
+        const res = await axios.get('books')
+        // console.log(res);
+
+        this.setState({
+            bookList: res.data
+        })
+
     }
     // 绑定数据
     handleData = (attr, e) => {
@@ -35,18 +35,9 @@ class BMS extends React.Component {
         })
     }
     // 提交
-    handleSubmit = () => {
+    handleSubmit = async () => {
 
-        let { bookID, bookName, bookList } = this.state
-
-        bookID = parseInt(bookID)
-        // console.log(bookID, "-----")
-
-        // 数据校验 --- 非空判断
-        if (!bookID) {
-            alert('图书编号异常或已存在');
-            return;
-        }
+        let { bookName } = this.state
 
         if (!bookName) {
             alert('请输入图书名称');
@@ -54,50 +45,36 @@ class BMS extends React.Component {
         }
 
         // 数据校验 --- 重复判断
-        const arr = bookList.filter(item => {
-            // console.log(item.id, typeof item.id)
-            // console.log(bookID, typeof bookID)
-            // console.log(item.id === bookID)
-            return item.id === bookID
-        })
+        // const arr = bookList.filter(item => {
+        //     return item.bookName === bookName
+        // })
 
-        if (arr.length) {
-            alert('图书已存在');
-            return;
+        // if (arr.length) {
+        //     alert('图书已存在');
+        //     return;
+        // }
+
+        const flag = await axios.get(`books/book/${bookName}`)
+        console.log(flag);
+        
+        if(flag.data.status===1){
+            // 已存在
+            alert('该图书名已存在')
+            return
         }
 
+        const res = await axios.post('books', { bookName });
 
-        // BUG：这样写不行,写完之后页面无法更新视图。虽然检测数据中是有新数据的。
-        // const data = this.state.bookList;
-
-        // 所以需要浅拷贝一下，并且复杂数据类型的似乎最好都是拷贝一份再对副本进行操作。
-        const data = [...bookList];
-
-        // data.push(
-        //     <tr key={bookID}>
-        //         <td>{bookID}</td>
-        //         <td>{bookName}</td>
-        //         <td>
-        //             <a href="https://github.com/ViavaCos/demo-book-manager-system">编辑</a>
-        //             <span className="line">|</span>
-        //             <a href="https://github.com/ViavaCos/demo-book-manager-system">删除</a>
-        //         </td>
-        //     </tr>
-        // )
-
-        data.push({ id: bookID, bookName })
-
-        // 修改状态值
-        this.setState({
-            bookList: data,
-            bookID: '',
-            bookName: ''
-        })
-
-        // console.log(this.state.bookList)
+        if (res.status === 200) {
+            alert('添加成功')
+            this.getBooks()
+            this.setState({
+                bookName: ''
+            })
+        }
     }
     // 删除图书
-    handleDelete (id, e) {
+    async handleDelete (id, e) {
         // 此方法无法在React中阻止默认行为
         // return false
 
@@ -105,66 +82,86 @@ class BMS extends React.Component {
         e.preventDefault();
 
         if (window.confirm('你确定要删除该图书吗？删除后将无法恢复!')) {
-            // 拷贝数组
-            let bookList = [...this.state.bookList]
 
-            // 查找匹配索引值
-            const index = bookList.findIndex(item => {
-                return item.id === id
-            })
-
-            // 移除匹配数据
-            index !== -1 && bookList.splice(index, 1)
-
-            // 覆盖状态值
-            this.setState({
-                bookList
-            })
-
-            // console.log(index)
+            const res = await axios.delete(`books/${id}`)
+            if (res.status === 200) {
+                alert('删除成功')
+                this.getBooks()
+            }
         }
     }
     // 编辑图书
-    handleEdit = (id, e) => {
+    handleEdit = async (id, e) => {
         e.preventDefault();
         // console.log(id)
 
-        const currentEdit = this.state.bookList && this.state.bookList.find(item => {
-            return item.id === id
-        })
+        // const currentEdit = this.state.bookList && this.state.bookList.find(item => {
+        //     return item.id === id
+        // })
+
+        const res = await axios.get(`books/${id}`)
+
         this.setState({
-            currentEdit
+            currentEdit: res.data
         })
         this.close()
-        // console.log(currentEdit);
+        // console.log(res);
 
     }
 
     // 保存编辑
-    saveEditChange = ({ bookName, id }) => {
+    saveEditChange = async ({ bookName, id }) => {
         // console.log(bookName)
         // console.log(id)
-        let bookList = [...this.state.bookList]
-        let flag = bookList.some(item => {
-            // console.log('id:',id)
-            // console.log('item.id',item.id)
-            if (item.id === id) {
-                item.bookName = bookName
-                // console.log('修改后的值：',item.bookName);
-                return true;
-            }
-            return false
-        })
+        // let bookList = [...this.state.bookList]
+        // let flag = bookList.some(item => {
+        //     // console.log('id:',id)
+        //     // console.log('item.id',item.id)
+        //     if (item.id === id) {
+        //         item.bookName = bookName
+        //         // console.log('修改后的值：',item.bookName);
+        //         return true;
+        //     }
+        //     return false
+        // })
         // console.log('flag:',flag);
+
+        // const bookList = [...this.state.bookList]
+
+        // const flag = bookList.findIndex(item => {
+        //     if (item.id === id) {
+        //         return false
+        //     }
+        //     return item.bookName === bookName
+        // })
+        // // console.log(flag);
+
+        // if (flag !== -1) {
+        //     alert('该图书名已存在')
+        //     return
+        // }
+
+
+        const flag = await axios.get(`books/book/${bookName}`)
+        console.log(flag);
         
-        if (flag) {
-            this.setState({
-                bookList
-            })
+        if(flag.status===200){
+            // 已存在
+            alert('该图书名已存在')
+            return
+        }
+
+        const res = await axios.put(`books/${id}`, { bookName })
+
+        if (res.status === 200) {
+            alert('修改成功')
+            // this.setState({
+            //     bookList
+            // })
             this.close(false)
+            this.getBooks()
         }
         // console.log(bookList);
-        
     }
 
     // 操作弹窗
@@ -202,7 +199,7 @@ class BMS extends React.Component {
                 <div className="title">图书管理系统</div>
                 <div className="addNew">
                     <span>图书编号：</span>
-                    <input value={this.state.bookID} onChange={this.handleData.bind(this, 'bookID')} type="text" />
+                    <input placeholder="Not required" readOnly value={this.state.bookID} onChange={this.handleData.bind(this, 'bookID')} type="text" />
                     <span>图书名称：</span>
                     <input value={this.state.bookName} onChange={this.handleData.bind(this, 'bookName')} type="text" />
                     <button onClick={this.handleSubmit}>提交</button>

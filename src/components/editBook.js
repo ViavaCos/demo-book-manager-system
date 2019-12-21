@@ -54,7 +54,7 @@ class EditBook extends React.Component {
                     <div className="content">
                         <div className="item">
                             <label htmlFor="bookID" >图书编号：</label>
-                            <input readOnly value={id} onChange={this.handleData.bind(this, "id")} type="text" id="bookID" />
+                            <input placeholder="Not required" readOnly value={id} onChange={this.handleData.bind(this, "id")} type="text" id="bookID" />
                         </div>
                         <div className="item">
                             <label htmlFor="bookName">图书名称：</label>
