@@ -1,0 +1,39 @@
+.container{
+    position: relative;
+    height: 500px;
+}
+
+.cover{
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, .2);
+}
+
+.card{
+    width: 400px;
+    height: 200px;
+    position: absolute;
+    background-color: #fff;
+    top: 0;
+    left: 100px;
+}
+
+.content{
+    padding: 30px 0 0 30px;
+}
+
+.content .item{
+    margin-bottom: 10px;
+}
+.card .title{
+    position: relative;
+}
+.card  .title .close{
+    text-decoration: none;
+    position: absolute;
+    right: 10px;
+    color: #6d0000;
+}

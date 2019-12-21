@@ -1,11 +1,14 @@
 import React from 'react'
 import '../styles/BookManagerSystem.css'
+import EditBook from './editBook'
 class BMS extends React.Component {
 
     state = {
-        bookList: null,
+        bookList: [],
         bookID: '',
-        bookName: ''
+        bookName: '',
+        isShow: false,
+        currentEdit: null
     }
 
     // ******************************************* 函数方法区域 **********************************************
@@ -122,8 +125,54 @@ class BMS extends React.Component {
         }
     }
     // 编辑图书
-    handleEdit (e) {
+    handleEdit = (id, e) => {
         e.preventDefault();
+        // console.log(id)
+
+        const currentEdit = this.state.bookList && this.state.bookList.find(item => {
+            return item.id === id
+        })
+        this.setState({
+            currentEdit
+        })
+        this.close()
+        // console.log(currentEdit);
+
+    }
+
+    // 保存编辑
+    saveEditChange = ({ bookName, id }) => {
+        // console.log(bookName)
+        // console.log(id)
+        let bookList = [...this.state.bookList]
+        let flag = bookList.some(item => {
+            // console.log('id:',id)
+            // console.log('item.id',item.id)
+            if (item.id === id) {
+                item.bookName = bookName
+                // console.log('修改后的值：',item.bookName);
+                return true;
+            }
+            return false
+        })
+        // console.log('flag:',flag);
+        
+        if (flag) {
+            this.setState({
+                bookList
+            })
+            this.close(false)
+        }
+        // console.log(bookList);
+        
+    }
+
+    // 操作弹窗
+    close = (status) => {
+        // console.log(status)
+        this.setState({
+            isShow: status === false ? status : true
+        })
     }
 
     // ******************************************* 钩子函数区域 **********************************************
@@ -132,6 +181,7 @@ class BMS extends React.Component {
     }
 
     render () {
+        const { isShow, currentEdit } = this.state
 
         // 在render函数中处理数据
         // tips: map方法返回一个新数组(踩了不太熟的坑)
@@ -140,13 +190,12 @@ class BMS extends React.Component {
                 <td>{item.id}</td>
                 <td>{item.bookName}</td>
                 <td>
-                    <a onClick={this.handleEdit} href="https://github.com/ViavaCos/demo-book-manager-system">编辑</a>
+                    <a onClick={this.handleEdit.bind(this, item.id)} href="https://github.com/ViavaCos/demo-book-manager-system">编辑</a>
                     <span className="line">|</span>
                     <a onClick={this.handleDelete.bind(this, item.id)} href="https://github.com/ViavaCos/demo-book-manager-system">删除</a>
                 </td>
             </tr>
         ))
-
 
         return (
             <div className="wrapper">
@@ -168,11 +217,7 @@ class BMS extends React.Component {
                     </thead>
                     <tbody>
                         {/* 提示信息 */}
-                        {
-                            !this.state.bookList && <tr>
-                                <td colSpan="3">数据加载中...</td>
-                            </tr>
-                        }
+                        {!this.state.bookList.length && <tr><td colSpan="3">暂无数据</td></tr>}
 
                         {/* <tr>
                             <td>1</td>
@@ -202,9 +247,13 @@ class BMS extends React.Component {
                             </td>
                         </tr> */}
 
+                        {/* 数据渲染 */}
                         {bookList}
                     </tbody>
                 </table>
+
+                {/* 图书编辑 */}
+                {isShow && <EditBook data={currentEdit} isShow={this.close} save={this.saveEditChange} />}
             </div>
         )
     }
